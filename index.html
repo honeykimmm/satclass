@@ -504,7 +504,7 @@ h1 .hl{
       (채우기 전까지는 이 브라우저에만 저장되는 미리보기 모드로 동작)
 ═══════════════════════════════════════════════ */
 const ADMIN_PW = "0705";
-const firebaseConfig = {
+const FIREBASE_CONFIG = {
   apiKey: "AIzaSyA2k1eKDemYkcWnUOUIXQilmc3R5DG2dCk",
   authDomain: "satclass-cb0bb.firebaseapp.com",
   projectId: "satclass-cb0bb",
@@ -1036,9 +1036,10 @@ function init(){
   if(window.matchMedia('(prefers-reduced-motion: reduce)').matches){
     document.querySelectorAll('animate').forEach(a=>a.remove());
   }
-  if(useFB){
+  if(useFB && typeof firebase !== 'undefined'){
     firebase.initializeApp(FIREBASE_CONFIG);
     db = firebase.firestore();
+    renderAll(); // 데이터 도착 전에도 화면 뼈대 먼저 표시
     db.collection('sticker_students').onSnapshot(snap=>{
       students = snap.docs.map(d=>({ id:d.id, ...d.data() }));
       renderAll();
