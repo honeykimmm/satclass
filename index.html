@@ -1,0 +1,1062 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sticker Board</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Gaegu:wght@400;700&family=Gowun+Dodum&display=swap" rel="stylesheet">
+<style>
+@font-face{font-family:'MagicPen';src:url('fonts/magicpen.woff2') format('woff2');font-display:swap}
+@font-face{font-family:'Cherry';src:url('fonts/cherry.woff2') format('woff2');font-display:swap}
+@font-face{font-family:'SubFont';src:url('fonts/heullim.woff2') format('woff2');font-display:swap}
+:root{
+  --paper:#FBF6EA;
+  --grid-line:rgba(160,140,110,.14);
+  --ink:#4A3B32;
+  --ink-soft:#8a7a6b;
+  --pen-pink:#FF5C8A;
+  --pen-blue:#5B8DEF;
+  --star:#FFC531;
+  --star-deep:#F5A700;
+  --note-lemon:#FFF3B0;
+  --note-pink:#FFD6E5;
+  --note-mint:#C9F2DC;
+  --note-lav:#E5DBFF;
+  --note-sky:#CFE8FF;
+  --note-peach:#FFDFC7;
+  --note-grass:#E4F5BD;
+  --note-sora:#C9EFF2;
+  --shadow:0 3px 10px rgba(90,70,40,.14);
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{
+  font-family:'Gowun Dodum',sans-serif;
+  color:var(--ink);
+  background-color:var(--paper);
+  background-image:
+    linear-gradient(var(--grid-line) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grid-line) 1px, transparent 1px);
+  background-size:26px 26px;
+  min-height:100vh;
+}
+button{font-family:inherit;cursor:pointer}
+input,select{font-family:inherit}
+
+/* ───── 헤더 ───── */
+header{
+  display:flex;align-items:flex-end;justify-content:space-between;
+  flex-wrap:wrap;gap:10px;
+  padding:26px 28px 0;
+  max-width:1180px;margin:0 auto;
+}
+.title-wrap{position:relative}
+h1{
+  font-family:'MagicPen','Gaegu',cursive;
+  font-size:42px;font-weight:400;line-height:1.1;
+  letter-spacing:1px;
+}
+h1 .hl{
+  background:linear-gradient(transparent 58%, #FFE066 58%, #FFE066 92%, transparent 92%);
+  padding:0 4px;
+}
+.subtitle{
+  font-family:'SubFont','Gaegu',cursive;font-size:17px;color:var(--ink-soft);
+  margin-top:2px;margin-left:4px;
+}
+.admin-btn{
+  background:#fff;border:1.5px dashed var(--ink-soft);border-radius:999px;
+  padding:7px 16px;font-family:'SubFont','Gaegu',cursive;font-size:15px;color:var(--ink-soft);
+  transition:.15s;
+}
+.admin-btn:hover{border-color:var(--pen-pink);color:var(--pen-pink);transform:rotate(-2deg)}
+
+/* ───── 반 탭 (마스킹테이프 느낌) ───── */
+.class-tabs{
+  display:flex;gap:10px;flex-wrap:wrap;
+  max-width:1180px;margin:18px auto 0;padding:0 28px;
+}
+.class-tab{
+  border:none;padding:9px 22px 7px;
+  font-family:'SubFont','Gaegu',cursive;font-size:18px;font-weight:700;color:var(--ink);
+  border-radius:4px 10px 4px 10px;
+  opacity:.62;box-shadow:var(--shadow);
+  transform:rotate(-1deg);transition:.15s;
+}
+.class-tab:nth-child(2){transform:rotate(1.2deg)}
+.class-tab:nth-child(3){transform:rotate(-.6deg)}
+.class-tab.t0{background:repeating-linear-gradient(45deg,var(--note-pink),var(--note-pink) 8px,#ffe1ec 8px,#ffe1ec 16px)}
+.class-tab.t1{background:repeating-linear-gradient(45deg,var(--note-sky),var(--note-sky) 8px,#e0f1ff 8px,#e0f1ff 16px)}
+.class-tab.t2{background:repeating-linear-gradient(45deg,var(--note-mint),var(--note-mint) 8px,#dcf7e8 8px,#dcf7e8 16px)}
+.class-tab.active{opacity:1;transform:rotate(0) scale(1.06);outline:2px solid rgba(74,59,50,.25)}
+
+/* ───── 레이아웃 ───── */
+.layout{
+  max-width:1180px;margin:22px auto 60px;padding:0 28px;
+  display:grid;grid-template-columns:1fr 250px;gap:26px;align-items:start;
+}
+@media(max-width:860px){
+  .layout{grid-template-columns:1fr}
+  h1{font-size:38px}
+  aside{order:-1;display:grid;grid-template-columns:1fr 1fr;gap:14px}
+}
+@media(max-width:560px){
+  aside{grid-template-columns:1fr}
+  header,.class-tabs,.layout{padding-left:16px;padding-right:16px}
+}
+
+/* ───── 쿠폰 카드 보드 ───── */
+.board-hint{
+  font-family:'SubFont','Gaegu',cursive;font-size:15px;color:var(--ink-soft);margin-bottom:12px;
+}
+.board{
+  display:grid;grid-template-columns:repeat(auto-fill,minmax(158px,1fr));
+  gap:20px 16px;
+}
+.empty-board{
+  grid-column:1/-1;text-align:center;padding:60px 0;
+  font-family:'SubFont','Gaegu',cursive;font-size:19px;color:var(--ink-soft);
+}
+.card{
+  perspective:900px;height:210px;
+}
+.card-inner{
+  position:relative;width:100%;height:100%;
+  transform-style:preserve-3d;transition:transform .55s cubic-bezier(.4,1.4,.6,1);
+  cursor:pointer;
+}
+.card.flipped .card-inner{transform:rotateY(180deg)}
+.card-face{
+  position:absolute;inset:0;backface-visibility:hidden;-webkit-backface-visibility:hidden;
+  border-radius:6px;box-shadow:var(--shadow);
+}
+.card-front{
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;
+  padding:26px 12px 14px;
+}
+.card:nth-child(8n+1) .card-front{background:var(--note-lemon)}
+.card:nth-child(8n+2) .card-front{background:var(--note-pink)}
+.card:nth-child(8n+3) .card-front{background:var(--note-sky)}
+.card:nth-child(8n+4) .card-front{background:var(--note-grass)}
+.card:nth-child(8n+5) .card-front{background:var(--note-lav)}
+.card:nth-child(8n+6) .card-front{background:var(--note-peach)}
+.card:nth-child(8n+7) .card-front{background:var(--note-mint)}
+.card:nth-child(8n+8) .card-front{background:var(--note-sora)}
+.tape{
+  position:absolute;top:-9px;left:50%;transform:translateX(-50%) rotate(-3deg);
+  width:74px;height:22px;border-radius:2px;
+  background:rgba(255,255,255,.55);
+  box-shadow:0 1px 3px rgba(0,0,0,.08);
+  backdrop-filter:blur(1px);
+}
+.card-name{
+  font-family:'Cherry','Gaegu',cursive;font-size:27px;line-height:1.15;
+}
+.card-count{
+  font-family:'SubFont','Gaegu',cursive;font-size:15px;color:var(--ink-soft);
+}
+.card-count b{font-size:24px;color:var(--star-deep)}
+.mini-track{
+  display:flex;gap:3px;margin-top:4px;
+}
+.mini-track i{
+  width:11px;height:11px;border-radius:50%;
+  border:1.5px dashed rgba(74,59,50,.35);
+}
+.mini-track i.on{background:var(--star);border:1.5px solid var(--star-deep)}
+.gift-badge{
+  position:absolute;bottom:8px;right:9px;
+  font-family:'SubFont','Gaegu',cursive;font-size:13px;color:var(--pen-pink);font-weight:700;
+}
+.gift-ready{
+  position:absolute;top:10px;right:8px;transform:rotate(8deg);
+  background:var(--pen-pink);color:#fff;border-radius:999px;
+  font-family:'SubFont','Gaegu',cursive;font-size:12px;font-weight:700;padding:3px 9px;
+  animation:wiggle 1.6s ease-in-out infinite;
+}
+@keyframes wiggle{0%,100%{transform:rotate(6deg)}50%{transform:rotate(12deg) scale(1.05)}}
+
+/* 카드 뒷면 */
+.card-back{
+  transform:rotateY(180deg);
+  background:#fff;
+  background-image:linear-gradient(rgba(91,141,239,.13) 1px, transparent 1px);
+  background-size:100% 22px;
+  padding:10px;
+}
+.back-name{
+  font-family:'Cherry','Gaegu',cursive;font-size:17px;color:var(--ink-soft);
+  text-align:center;
+}
+.star-field{position:absolute;left:6px;right:6px;top:28px;bottom:38px}
+.star-btn{
+  position:absolute;width:30px;height:30px;background:none;border:none;padding:0;
+  filter:drop-shadow(0 1px 1px rgba(0,0,0,.18));
+  transition:transform .12s;
+}
+.star-btn:hover{transform:scale(1.25)!important;z-index:3}
+.star-btn svg{width:100%;height:100%}
+.no-star{
+  position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+  font-family:'SubFont','Gaegu',cursive;font-size:14px;color:#c9bfb4;text-align:center;line-height:1.5;
+}
+.voca-progress{
+  position:absolute;left:10px;right:10px;bottom:8px;
+  display:flex;align-items:center;gap:5px;
+  font-family:'SubFont','Gaegu',cursive;font-size:12px;color:var(--ink-soft);
+}
+.voca-progress .dots{display:flex;gap:3px}
+.voca-progress .dots i{
+  width:10px;height:10px;border-radius:50%;
+  border:1.5px dashed rgba(255,92,138,.5);
+}
+.voca-progress .dots i.on{background:#FF9FBE;border:1.5px solid var(--pen-pink)}
+
+/* 별 말풍선 */
+.bubble{
+  position:absolute;z-index:20;max-width:150px;
+  background:var(--ink);color:#FFF8EC;
+  font-family:'SubFont','Gaegu',cursive;font-size:13px;line-height:1.45;
+  padding:7px 10px;border-radius:10px;
+  box-shadow:0 4px 10px rgba(0,0,0,.25);
+  transform:translate(-50%,-110%);
+  pointer-events:none;white-space:pre-line;text-align:center;
+}
+.bubble::after{
+  content:'';position:absolute;left:50%;bottom:-6px;transform:translateX(-50%);
+  border:6px solid transparent;border-top-color:var(--ink);border-bottom:none;
+}
+
+/* ───── 사이드 (캘린더 + 규칙) ───── */
+.side-note{
+  border-radius:6px;box-shadow:var(--shadow);padding:16px 14px 14px;position:relative;
+  margin-bottom:20px;
+}
+.side-note .tape{width:60px}
+.cal-note{background:#fff;transform:rotate(.8deg)}
+.rule-note{background:var(--note-lemon);transform:rotate(-1.2deg)}
+.side-title{
+  font-family:'SubFont','Gaegu',cursive;font-size:17px;font-weight:700;text-align:center;margin-bottom:8px;
+}
+.cal-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px}
+.cal-head b{font-family:'SubFont','Gaegu',cursive;font-size:16px}
+.cal-head button{
+  background:none;border:none;font-size:16px;color:var(--ink-soft);padding:2px 8px;border-radius:6px;
+}
+.cal-head button:hover{background:rgba(0,0,0,.06)}
+.cal-grid{
+  display:grid;grid-template-columns:repeat(7,1fr);gap:2px;text-align:center;
+  font-family:'SubFont','Gaegu',cursive;font-size:13px;
+}
+.cal-grid .wd{color:var(--ink-soft);font-weight:700;padding:2px 0}
+.cal-grid .wd:first-child{color:#e05b5b}
+.cal-grid .wd:last-child{color:var(--pen-blue)}
+.cal-cell{
+  position:relative;padding:5px 0;border-radius:50%;
+}
+.cal-cell.sun{color:#e05b5b}
+.cal-cell.sat{color:var(--pen-blue);font-weight:700}
+.cal-cell.today{outline:1.5px solid var(--ink-soft);outline-offset:-1px}
+.cal-cell.sched{
+  background:var(--pen-pink);color:#fff!important;font-weight:700;
+  box-shadow:0 2px 5px rgba(255,92,138,.4);
+}
+.cal-cell.sched::after{
+  content:'보충';position:absolute;left:50%;bottom:-7px;transform:translateX(-50%);
+  font-size:8px;color:var(--pen-pink);font-weight:700;letter-spacing:-.5px;
+}
+.cal-cell.clickable{cursor:pointer}
+.cal-cell.clickable:hover{background:rgba(255,92,138,.18)}
+.cal-cell.clickable.sched:hover{background:#e64a78}
+.rule-list{font-family:'SubFont','Gaegu',cursive;font-size:15px;line-height:1.9}
+.rule-list b{color:var(--pen-pink)}
+
+/* ───── 모달 (비밀번호) ───── */
+.modal-bg{
+  position:fixed;inset:0;background:rgba(60,45,30,.45);z-index:50;
+  display:flex;align-items:center;justify-content:center;padding:20px;
+}
+.modal{
+  background:#fff;border-radius:14px;padding:26px 24px;width:100%;max-width:320px;
+  box-shadow:0 10px 40px rgba(0,0,0,.3);text-align:center;position:relative;
+}
+.modal h3{font-family:'SubFont','Gaegu',cursive;font-size:20px;margin-bottom:14px}
+.modal input{
+  width:100%;padding:11px;border:1.5px solid #ddd;border-radius:9px;
+  font-size:16px;text-align:center;letter-spacing:4px;
+}
+.modal input:focus{outline:none;border-color:var(--pen-pink)}
+.modal .err{color:#e05b5b;font-size:13px;height:18px;margin-top:6px;font-family:'SubFont','Gaegu',cursive}
+.modal-btns{display:flex;gap:8px;margin-top:8px}
+.modal-btns button{
+  flex:1;padding:11px;border:none;border-radius:9px;font-size:15px;font-family:'SubFont','Gaegu',cursive;font-weight:700;
+}
+.btn-cancel{background:#f0ece4;color:var(--ink-soft)}
+.btn-go{background:var(--pen-pink);color:#fff}
+
+/* ───── 관리자 화면 ───── */
+#adminView{display:none;max-width:1000px;margin:0 auto;padding:24px 24px 80px}
+.admin-top{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:18px}
+.admin-top h2{font-family:'SubFont','Gaegu',cursive;font-size:34px;font-weight:400}
+.back-btn{
+  background:#fff;border:1.5px solid #ddd;border-radius:999px;padding:8px 18px;
+  font-family:'SubFont','Gaegu',cursive;font-size:15px;color:var(--ink-soft);
+}
+.admin-tabs{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:20px}
+.admin-tab{
+  border:none;border-radius:999px;padding:9px 18px;
+  font-family:'SubFont','Gaegu',cursive;font-size:16px;font-weight:700;
+  background:#fff;color:var(--ink-soft);box-shadow:var(--shadow);
+}
+.admin-tab.active{background:var(--ink);color:#FFF3B0}
+.panel{background:#fff;border-radius:14px;box-shadow:var(--shadow);padding:22px}
+.panel h4{font-family:'SubFont','Gaegu',cursive;font-size:18px;margin-bottom:12px}
+.chip-row{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px}
+.chip{
+  border:1.5px solid #e5ddd0;background:#fdfaf3;border-radius:999px;padding:7px 16px;
+  font-family:'SubFont','Gaegu',cursive;font-size:15px;font-weight:700;color:var(--ink-soft);
+}
+.chip.active{background:var(--pen-pink);border-color:var(--pen-pink);color:#fff}
+.chip.small{padding:5px 12px;font-size:13px}
+.date-row{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:16px}
+.date-row input[type=date]{
+  padding:8px 10px;border:1.5px solid #e5ddd0;border-radius:9px;font-size:15px;background:#fdfaf3;
+}
+.date-row label{font-family:'SubFont','Gaegu',cursive;font-size:15px;color:var(--ink-soft);font-weight:700}
+.stu-toggle-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:10px}
+.stu-toggle{
+  border:2px solid #e5ddd0;background:#fdfaf3;border-radius:12px;padding:13px 8px;
+  font-size:16px;font-family:'SubFont','Gaegu',cursive;font-weight:700;color:var(--ink-soft);
+  transition:.12s;
+}
+.stu-toggle.on{background:var(--note-mint);border-color:#4CBB87;color:#1e7a52}
+.stu-toggle.on::after{content:' ✓'}
+.save-note{font-family:'SubFont','Gaegu',cursive;font-size:13px;color:var(--ink-soft);margin-top:14px}
+.score-table{width:100%;border-collapse:collapse;margin-top:4px}
+.score-table th{
+  font-family:'SubFont','Gaegu',cursive;font-size:14px;color:var(--ink-soft);font-weight:700;
+  text-align:left;padding:6px 8px;border-bottom:1.5px solid #eee;
+}
+.score-table td{padding:7px 8px;border-bottom:1px solid #f4f0e8;font-size:15px}
+.score-table input[type=number]{
+  width:80px;padding:7px;border:1.5px solid #e5ddd0;border-radius:8px;font-size:15px;text-align:center;
+}
+.score-table input[type=radio]{width:17px;height:17px;accent-color:var(--pen-pink)}
+.big-btn{
+  border:none;border-radius:10px;padding:12px 22px;font-family:'SubFont','Gaegu',cursive;
+  font-size:16px;font-weight:700;background:var(--ink);color:#FFF3B0;margin-top:16px;
+}
+.big-btn.pink{background:var(--pen-pink);color:#fff}
+.big-btn:disabled{opacity:.4;cursor:default}
+.preview-box{
+  margin-top:16px;background:#FFF8E8;border:1.5px dashed #e8ce8a;border-radius:12px;padding:14px 16px;
+  font-size:14px;line-height:2;
+}
+.preview-box .pass{color:#1e7a52;font-weight:700}
+.preview-box .fail{color:#b0a394}
+.mgr-list{display:flex;flex-direction:column;gap:10px}
+.mgr-row{
+  border:1.5px solid #f0e9dc;border-radius:12px;padding:12px 14px;
+}
+.mgr-main{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.mgr-main .nm{font-family:'SubFont','Gaegu',cursive;font-size:18px;font-weight:700;min-width:70px}
+.mgr-main .st{font-size:13px;color:var(--ink-soft)}
+.mgr-main .sp{flex:1}
+.sm-btn{
+  border:1.5px solid #e5ddd0;background:#fdfaf3;border-radius:8px;padding:6px 12px;
+  font-family:'SubFont','Gaegu',cursive;font-size:13px;font-weight:700;color:var(--ink-soft);
+}
+.sm-btn.pink{border-color:var(--pen-pink);color:var(--pen-pink)}
+.sm-btn.danger{border-color:#e8b5b5;color:#c95c5c}
+.rec-detail{margin-top:10px;padding-top:10px;border-top:1px dashed #e5ddd0;display:none}
+.rec-detail.open{display:block}
+.rec-detail h6{font-family:'SubFont','Gaegu',cursive;font-size:13px;color:var(--ink-soft);margin:6px 0 4px}
+.rec-chips{display:flex;gap:6px;flex-wrap:wrap}
+.rec-chip{
+  display:inline-flex;align-items:center;gap:5px;
+  background:#fdf4e0;border:1px solid #eddfb8;border-radius:999px;
+  padding:3px 6px 3px 10px;font-size:12px;
+}
+.rec-chip.voca{background:#ffeef4;border-color:#f4c7d6}
+.rec-chip button{border:none;background:none;color:#c95c5c;font-size:13px;padding:0 3px}
+.add-row{display:flex;gap:8px;margin-bottom:16px}
+.add-row input{
+  flex:1;max-width:240px;padding:10px 12px;border:1.5px solid #e5ddd0;border-radius:9px;font-size:15px;
+}
+.cal-big{max-width:420px}
+.cal-big .cal-grid{font-size:15px}
+.cal-big .cal-cell{padding:9px 0}
+.sched-list{margin-top:16px;font-size:14px;display:flex;gap:8px;flex-wrap:wrap}
+
+/* 미리보기 모드 배너 */
+.demo-banner{
+  position:fixed;left:50%;bottom:14px;transform:translateX(-50%);z-index:40;
+  background:var(--ink);color:#FFF3B0;font-family:'SubFont','Gaegu',cursive;font-size:13px;
+  padding:8px 18px;border-radius:999px;box-shadow:0 4px 14px rgba(0,0,0,.3);
+  white-space:nowrap;max-width:92vw;overflow:hidden;text-overflow:ellipsis;
+}
+.toast{
+  position:fixed;left:50%;top:20px;transform:translateX(-50%);z-index:60;
+  background:var(--ink);color:#fff;font-family:'SubFont','Gaegu',cursive;font-size:15px;
+  padding:10px 22px;border-radius:999px;box-shadow:0 4px 14px rgba(0,0,0,.3);
+  opacity:0;transition:.25s;pointer-events:none;
+}
+.toast.show{opacity:1}
+@media(prefers-reduced-motion:reduce){
+  .card-inner{transition:none}
+  .gift-ready{animation:none}
+}
+</style>
+</head>
+<body>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+<path id="starP" d="M12 1.8l3 6.4 6.8.8-5 4.8 1.3 6.8L12 17.2 5.9 20.6 7.2 13.8l-5-4.8 6.8-.8z"/>
+<clipPath id="starClip"><use href="#starP"/></clipPath>
+<linearGradient id="gAurora" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#5EE0B0"/><stop offset=".45" stop-color="#4D9BF5"/><stop offset=".75" stop-color="#8F6BF2"/><stop offset="1" stop-color="#C45BE8"/></linearGradient>
+<g id="glitter"><g clip-path="url(#starClip)">
+<g fill="#fff"><circle cx="9" cy="6.6" r=".85"/><circle cx="14.6" cy="8.4" r=".6" opacity=".9"/><circle cx="11.8" cy="12.6" r=".8" opacity=".95"/><circle cx="8.2" cy="14.8" r=".55" opacity=".85"/><circle cx="15.8" cy="14.6" r=".7" opacity=".9"/><circle cx="12.4" cy="5.4" r=".5" opacity=".8"/><circle cx="10.2" cy="10.4" r=".45" opacity=".75"/><circle cx="13.8" cy="16.8" r=".5" opacity=".8"/><circle cx="6.4" cy="10.2" r=".5" opacity=".7"/><circle cx="17.6" cy="10.8" r=".5" opacity=".7"/><circle cx="10.6" cy="17.4" r=".45" opacity=".75"/><circle cx="16.4" cy="12.2" r=".4" opacity=".65"/><circle cx="7.6" cy="12.2" r=".4" opacity=".65"/><circle cx="13" cy="9.8" r=".45" opacity=".7"/><circle cx="9.4" cy="8.8" r=".35" opacity=".6"/><circle cx="15" cy="6.4" r=".4" opacity=".65"/><circle cx="5.6" cy="8.8" r=".35" opacity=".6"/><circle cx="18.4" cy="9.2" r=".35" opacity=".6"/><circle cx="12" cy="15" r=".35" opacity=".6"/><circle cx="14.2" cy="13.4" r=".35" opacity=".55"/></g>
+<g fill="#FFF6C8"><circle cx="11" cy="7.8" r=".5" opacity=".9"/><circle cx="14.8" cy="11.4" r=".45" opacity=".8"/><circle cx="9" cy="12.8" r=".45" opacity=".8"/><circle cx="12.6" cy="18" r=".4" opacity=".7"/><circle cx="7.2" cy="9" r=".4" opacity=".7"/><circle cx="16.8" cy="8" r=".4" opacity=".7"/></g>
+<g fill="#fff">
+<path d="M13.6 6.3l.5 1.3 1.3.5-1.3.5-.5 1.3-.5-1.3-1.3-.5 1.3-.5z"><animate attributeName="opacity" values="1;.15;1" dur="1.6s" repeatCount="indefinite"/></path>
+<path d="M8.9 10.7l.45 1.15 1.15.45-1.15.45-.45 1.15-.45-1.15-1.15-.45 1.15-.45z"><animate attributeName="opacity" values="1;.2;1" dur="2s" begin=".5s" repeatCount="indefinite"/></path>
+<path d="M13.4 13.2l.4 1 1 .4-1 .4-.4 1-.4-1-1-.4 1-.4z"><animate attributeName="opacity" values="1;.25;1" dur="1.8s" begin="1s" repeatCount="indefinite"/></path>
+</g></g>
+<path d="M19.8 2.2l.7 1.9 1.9.7-1.9.7-.7 1.9-.7-1.9-1.9-.7 1.9-.7z" fill="#fff"><animate attributeName="opacity" values="1;.3;1" dur="1.7s" begin=".3s" repeatCount="indefinite"/></path>
+<path d="M4.4 16.6l.5 1.4 1.4.5-1.4.5-.5 1.4-.5-1.4-1.4-.5 1.4-.5z" fill="#fff"><animate attributeName="opacity" values="1;.3;1" dur="2.1s" begin=".9s" repeatCount="indefinite"/></path>
+</g>
+</defs></svg>
+
+<!-- ═══════════ 학생 화면 ═══════════ -->
+<div id="studentView">
+  <header>
+    <div class="title-wrap">
+      <h1>⭐ <span class="hl">Sticker Board</span></h1>
+      <div class="subtitle">토요일 보충 &amp; 단어시험 스티커</div>
+    </div>
+    <button class="admin-btn" onclick="openPwModal()">🔒 현채쌤</button>
+  </header>
+
+  <div class="class-tabs" id="classTabs"></div>
+
+  <div class="layout">
+    <main>
+      <div class="board-hint">✏️ 쿠폰을 누르면 뒤집혀요! 별을 누르면 언제 받았는지 볼 수 있어요.</div>
+      <div class="board" id="board"></div>
+    </main>
+    <aside>
+      <div class="side-note cal-note">
+        <div class="tape"></div>
+        <div class="side-title">🗓 토요일 보충 캘린더</div>
+        <div id="stuCal"></div>
+      </div>
+      <div class="side-note rule-note">
+        <div class="tape"></div>
+        <div class="side-title">📌 스티커 규칙</div>
+        <div class="rule-list">
+          · 토요일 보충 1번 = <b>별 1개</b><br>
+          · 단어시험 통과 5번 = <b>별 1개</b><br>
+          · 별 10개 모으면 = <b>선물 🎁</b>
+        </div>
+      </div>
+    </aside>
+  </div>
+</div>
+
+<!-- ═══════════ 관리자 화면 ═══════════ -->
+<div id="adminView">
+  <div class="admin-top">
+    <h2>🔧 현채쌤 페이지</h2>
+    <button class="back-btn" onclick="closeAdmin()">← 보드로 돌아가기</button>
+  </div>
+  <div class="admin-tabs">
+    <button class="admin-tab active" data-tab="attend" onclick="switchAdminTab('attend')">토요일 출석</button>
+    <button class="admin-tab" data-tab="vocab" onclick="switchAdminTab('vocab')">단어 시험</button>
+    <button class="admin-tab" data-tab="sched" onclick="switchAdminTab('sched')">보충 일정</button>
+    <button class="admin-tab" data-tab="manage" onclick="switchAdminTab('manage')">학생 관리</button>
+  </div>
+  <div class="panel" id="adminPanel"></div>
+</div>
+
+<!-- 비밀번호 모달 -->
+<div class="modal-bg" id="pwModal" style="display:none">
+  <div class="modal">
+    <h3>🔒 선생님 비밀번호</h3>
+    <input type="password" id="pwInput" inputmode="numeric" placeholder="****" onkeydown="if(event.key==='Enter')checkPw()">
+    <div class="err" id="pwErr"></div>
+    <div class="modal-btns">
+      <button class="btn-cancel" onclick="closePwModal()">취소</button>
+      <button class="btn-go" onclick="checkPw()">들어가기</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script>
+/* ═══════════════════════════════════════════════
+   ★ 설정 — 여기만 수정하면 돼요!
+   1) ADMIN_PW : 선생님 페이지 비밀번호
+   2) FIREBASE_CONFIG : Firebase 콘솔 > 프로젝트 설정 > 내 앱 에서 복사
+      (채우기 전까지는 이 브라우저에만 저장되는 미리보기 모드로 동작)
+═══════════════════════════════════════════════ */
+const ADMIN_PW = "0705";
+const FIREBASE_CONFIG = {
+  apiKey: "YOUR_API_KEY",
+  authDomain: "YOUR_PROJECT.firebaseapp.com",
+  projectId: "YOUR_PROJECT",
+  storageBucket: "YOUR_PROJECT.appspot.com",
+  messagingSenderId: "000000000000",
+  appId: "YOUR_APP_ID"
+};
+const CLASSES = ["월수반","월금반","화목반"];
+/* ═══════════════════════════════════════════════ */
+
+const useFB = FIREBASE_CONFIG.apiKey !== "YOUR_API_KEY";
+let db = null;
+let students = [];               // {id,name,cls,satDates[],vocabDates[],rewards}
+let config = { satSchedule: [] };
+let currentClass = CLASSES[0];
+let stuCalMonth = firstOfMonth(new Date());
+let admCalMonth = firstOfMonth(new Date());
+let currentAdminTab = 'attend';
+let adminOpen = false;
+let openBubbleEl = null;
+let vocabPreview = null;         // 단어시험 계산 결과 임시 저장
+let vocabMode = 'score';         // 'score' | 'manual'
+
+/* ───── 유틸 ───── */
+function firstOfMonth(d){ return new Date(d.getFullYear(), d.getMonth(), 1); }
+function fmt(d){ // Date -> "YYYY-MM-DD"
+  const p = n => String(n).padStart(2,'0');
+  return d.getFullYear()+'-'+p(d.getMonth()+1)+'-'+p(d.getDate());
+}
+function todayStr(){ return fmt(new Date()); }
+function prettyDate(s){ const [y,m,d]=s.split('-'); return +m+'월 '+ +d +'일'; }
+function hashStr(s){
+  let h = 2166136261;
+  for(const c of s){ h ^= c.codePointAt(0); h = Math.imul(h, 16777619); }
+  return h >>> 0;
+}
+function rand01(seed){
+  let t = seed + 0x6D2B79F5;
+  t = Math.imul(t ^ t >>> 15, t | 1);
+  t ^= t + Math.imul(t ^ t >>> 7, t | 61);
+  return ((t ^ t >>> 14) >>> 0) / 4294967296;
+}
+function esc(s){ return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+function toast(msg){
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  clearTimeout(t._tm); t._tm = setTimeout(()=>t.classList.remove('show'), 1800);
+}
+const SAT_COLORS = ['#FFC531','#FF8E6E','#63C58A','#6FB5F7','#A98BF0','#F98BBB'];
+function satStarSVG(color){
+  return `<svg viewBox="0 0 24 24"><use href="#starP" fill="${color}" stroke="#fff" stroke-width="1.4" stroke-linejoin="round"/></svg>`;
+}
+const GLITTER_SVG = '<svg viewBox="0 0 24 24"><use href="#starP" fill="url(#gAurora)" stroke="#fff" stroke-width="1.4" stroke-linejoin="round"/><use href="#glitter"/></svg>';
+
+/* ───── 데이터 계층 (Firebase ↔ localStorage) ───── */
+function lsLoad(){
+  students = JSON.parse(localStorage.getItem('sb_students') || 'null');
+  config   = JSON.parse(localStorage.getItem('sb_config')   || 'null') || { satSchedule: [] };
+  if(students === null){ students = []; seedDemo(); }
+}
+function lsSaveAll(){
+  localStorage.setItem('sb_students', JSON.stringify(students));
+  localStorage.setItem('sb_config', JSON.stringify(config));
+}
+function seedDemo(){ // 미리보기용 예시 데이터 (학생 관리에서 지울 수 있어요)
+  const names = { '월수반':['김하늘','이도윤','박서아'], '월금반':['최지우','정시우'], '화목반':['한예린','오준서'] };
+  const t = new Date();
+  CLASSES.forEach(cls => names[cls].forEach((nm,i)=>{
+    const sat=[], voc=[];
+    const n = 2 + (hashStr(nm)%7);
+    for(let k=0;k<n;k++){ const d=new Date(t); d.setDate(d.getDate()-7*(k+1)-(k%2)); sat.push(fmt(d)); }
+    const v = hashStr(nm+'v')%9;
+    for(let k=0;k<v;k++){ const d=new Date(t); d.setDate(d.getDate()-3*(k+1)); voc.push(fmt(d)); }
+    students.push({ id:'demo_'+cls+'_'+i, name:nm, cls, satDates:sat.sort(), vocabDates:voc.sort(), rewards:0 });
+  }));
+  const sat = new Date(t); sat.setDate(sat.getDate() + ((6 - sat.getDay() + 7) % 7 || 7));
+  config.satSchedule = [fmt(sat)];
+  lsSaveAll();
+}
+async function dbCreateStudent(name, cls){
+  const data = { name, cls, satDates:[], vocabDates:[], rewards:0 };
+  if(useFB){ await db.collection('sticker_students').add(data); }
+  else { students.push({ id:'s'+Date.now()+Math.floor(Math.random()*999), ...data }); lsSaveAll(); renderAll(); }
+}
+async function dbSaveStudent(st){
+  if(useFB){
+    const { id, ...data } = st;
+    await db.collection('sticker_students').doc(id).set(data);
+  } else {
+    const i = students.findIndex(s=>s.id===st.id);
+    if(i>-1) students[i] = st;
+    lsSaveAll(); renderAll();
+  }
+}
+async function dbDeleteStudent(id){
+  if(useFB){ await db.collection('sticker_students').doc(id).delete(); }
+  else { students = students.filter(s=>s.id!==id); lsSaveAll(); renderAll(); }
+}
+async function dbSaveConfig(){
+  if(useFB){ await db.doc('sticker_config/main').set(config); }
+  else { lsSaveAll(); renderAll(); }
+}
+
+/* ───── 별 계산 ─────
+   토요일 출석 1회 = 별 1개 / 단어시험 5회 = 별 1개
+   별 10개 = 선물, 지급된 선물(rewards)만큼 별 10개씩 차감 표시 */
+function getStars(st){
+  const sat = (st.satDates||[]).slice().sort();
+  const voc = (st.vocabDates||[]).slice().sort();
+  const stars = [];
+  sat.forEach(d => stars.push({ type:'sat', date:d }));
+  for(let i=0; i+5 <= voc.length; i+=5){
+    const g = voc.slice(i, i+5);
+    stars.push({ type:'vocab', date:g[4], dates:g });
+  }
+  stars.sort((a,b)=> a.date < b.date ? -1 : 1);
+  const used = (st.rewards||0) * 10;
+  return {
+    all: stars,
+    current: stars.slice(used),
+    vocRemain: voc.length % 5,
+    rewards: st.rewards||0
+  };
+}
+
+/* ───── 학생 화면 렌더 ───── */
+function renderClassTabs(){
+  document.getElementById('classTabs').innerHTML = CLASSES.map((c,i)=>
+    `<button class="class-tab t${i} ${c===currentClass?'active':''}" onclick="setClass('${c}')">${c}</button>`
+  ).join('');
+}
+function setClass(c){ currentClass = c; renderClassTabs(); renderBoard(); }
+
+function renderBoard(){
+  const list = students.filter(s=>s.cls===currentClass)
+                       .sort((a,b)=>a.name.localeCompare(b.name,'ko'));
+  const board = document.getElementById('board');
+  if(!list.length){
+    board.innerHTML = `<div class="empty-board">아직 친구들이 없어요!<br>선생님 페이지에서 추가할 수 있어요 ✏️</div>`;
+    return;
+  }
+  board.innerHTML = list.map(st=>{
+    const S = getStars(st);
+    const cur = S.current;
+    const shown = Math.min(cur.length, 10);
+    const rot = (rand01(hashStr(st.id)) - .5) * 3.6;
+    const starsHtml = cur.slice(0,12).map((star,i)=>{
+      const seed = hashStr(st.id+':'+i);
+      const row = Math.floor(i/4), col = i%4;
+      const left = 4 + col*23 + (rand01(seed)-.5)*10;
+      const top  = 4 + row*30 + (rand01(seed+1)-.5)*12;
+      const deg  = (rand01(seed+2)-.5)*44;
+      const tip  = star.type==='sat'
+        ? prettyDate(star.date)
+        : star.dates.map(prettyDate).join(' · ');
+      const svg = star.type==='vocab' ? GLITTER_SVG : satStarSVG(SAT_COLORS[hashStr(st.id+':'+i+':c')%SAT_COLORS.length]);
+      return `<button class="star-btn ${star.type==='vocab'?'vocab':''}"
+        style="left:${left}%;top:${top}%;transform:rotate(${deg}deg)"
+        onclick="showBubble(event,this)" data-tip="${esc(tip)}">${svg}</button>`;
+    }).join('');
+    const track = Array.from({length:10},(_,i)=>`<i class="${i<shown?'on':''}"></i>`).join('');
+    const dots  = Array.from({length:5},(_,i)=>`<i class="${i<S.vocRemain?'on':''}"></i>`).join('');
+    return `
+    <div class="card" id="card_${st.id}">
+      <div class="card-inner" onclick="flipCard('${st.id}')">
+        <div class="card-face card-front">
+          <div class="tape"></div>
+          ${cur.length>=10?'<div class="gift-ready">선물 받을 수 있어요!</div>':''}
+          <div class="card-name">${esc(st.name)}</div>
+          <div class="card-count"><b>${cur.length}</b> /10</div>
+          <div class="mini-track">${track}</div>
+          ${S.rewards>0?`<div class="gift-badge">🎁 ×${S.rewards}</div>`:''}
+        </div>
+        <div class="card-face card-back" style="transform:rotateY(180deg) rotate(${rot}deg)">
+          <div class="back-name">${esc(st.name)}</div>
+          <div class="star-field">
+            ${cur.length? starsHtml : '<div class="no-star">아직 별이 없어요!<br>토요일에 만나요 ☺</div>'}
+          </div>
+          <div class="voca-progress">단어시험 <span class="dots">${dots}</span> ${S.vocRemain}/5</div>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+function flipCard(id){
+  closeBubble();
+  document.getElementById('card_'+id).classList.toggle('flipped');
+}
+function showBubble(ev, btn){
+  ev.stopPropagation();
+  closeBubble();
+  const b = document.createElement('div');
+  b.className = 'bubble';
+  b.textContent = btn.dataset.tip;
+  const field = btn.parentElement;
+  field.appendChild(b);
+  b.style.left = Math.min(Math.max(parseFloat(btn.style.left)+8, 22), 78) + '%';
+  b.style.top  = btn.style.top;
+  openBubbleEl = b;
+}
+function closeBubble(){ if(openBubbleEl){ openBubbleEl.remove(); openBubbleEl=null; } }
+document.addEventListener('click', e=>{ if(!e.target.closest('.star-btn')) closeBubble(); });
+
+/* ───── 캘린더 ───── */
+function renderCalendar(elId, monthDate, editable){
+  const el = document.getElementById(elId);
+  if(!el) return;
+  const y = monthDate.getFullYear(), m = monthDate.getMonth();
+  const first = new Date(y, m, 1).getDay();
+  const days = new Date(y, m+1, 0).getDate();
+  const tStr = todayStr();
+  let cells = '<div class="cal-head">'
+    + `<button onclick="moveCal('${elId}',-1)">‹</button>`
+    + `<b>${y}년 ${m+1}월</b>`
+    + `<button onclick="moveCal('${elId}',1)">›</button></div>`
+    + '<div class="cal-grid">'
+    + ['일','월','화','수','목','금','토'].map(w=>`<div class="wd">${w}</div>`).join('');
+  for(let i=0;i<first;i++) cells += '<div></div>';
+  for(let d=1; d<=days; d++){
+    const ds = fmt(new Date(y,m,d));
+    const dow = new Date(y,m,d).getDay();
+    const cls = ['cal-cell',
+      dow===0?'sun':'', dow===6?'sat':'',
+      ds===tStr?'today':'',
+      config.satSchedule.includes(ds)?'sched':'',
+      editable?'clickable':''
+    ].filter(Boolean).join(' ');
+    cells += `<div class="${cls}" ${editable?`onclick="toggleSched('${ds}')"`:''}>${d}</div>`;
+  }
+  el.innerHTML = cells + '</div>';
+}
+function moveCal(elId, dir){
+  if(elId==='stuCal'){ stuCalMonth = new Date(stuCalMonth.getFullYear(), stuCalMonth.getMonth()+dir, 1); renderCalendar('stuCal', stuCalMonth, false); }
+  else { admCalMonth = new Date(admCalMonth.getFullYear(), admCalMonth.getMonth()+dir, 1); renderCalendar('admCal', admCalMonth, true); }
+}
+async function toggleSched(ds){
+  const i = config.satSchedule.indexOf(ds);
+  if(i>-1) config.satSchedule.splice(i,1); else config.satSchedule.push(ds);
+  config.satSchedule.sort();
+  await dbSaveConfig();
+  if(!useFB) return; // LS 모드는 dbSaveConfig가 renderAll 호출
+  renderCalendar('admCal', admCalMonth, true);
+}
+
+/* ───── 관리자: 진입/탭 ───── */
+function openPwModal(){
+  document.getElementById('pwModal').style.display='flex';
+  document.getElementById('pwErr').textContent='';
+  const inp = document.getElementById('pwInput');
+  inp.value=''; setTimeout(()=>inp.focus(),50);
+}
+function closePwModal(){ document.getElementById('pwModal').style.display='none'; }
+function checkPw(){
+  if(document.getElementById('pwInput').value === ADMIN_PW){
+    closePwModal();
+    adminOpen = true;
+    document.getElementById('studentView').style.display='none';
+    document.getElementById('adminView').style.display='block';
+    switchAdminTab('attend');
+  } else {
+    document.getElementById('pwErr').textContent='비밀번호가 달라요!';
+  }
+}
+function closeAdmin(){
+  adminOpen = false;
+  document.getElementById('adminView').style.display='none';
+  document.getElementById('studentView').style.display='block';
+  renderAll();
+}
+function switchAdminTab(tab){
+  currentAdminTab = tab;
+  vocabPreview = null;
+  document.querySelectorAll('.admin-tab').forEach(b=>b.classList.toggle('active', b.dataset.tab===tab));
+  renderAdminTab(false);
+}
+
+/* 관리자 패널 내 공통 상태 */
+let admClass = CLASSES[0];
+let attendDate = todayStr();
+let vocabDate = todayStr();
+
+function setAdmClass(c){ admClass = c; vocabPreview = null; renderAdminTab(false); }
+
+function renderAdminTab(fromSnapshot){
+  const p = document.getElementById('adminPanel');
+  if(currentAdminTab==='attend') renderAttend(p);
+  else if(currentAdminTab==='vocab'){
+    // 스냅샷 갱신으로 점수 입력 중인 표가 날아가지 않게 보호
+    if(fromSnapshot && vocabMode==='score' && p.querySelector('.score-table')) return;
+    renderVocab(p);
+  }
+  else if(currentAdminTab==='sched') renderSched(p);
+  else renderManage(p);
+}
+function classChips(){
+  return `<div class="chip-row">${CLASSES.map(c=>
+    `<button class="chip ${c===admClass?'active':''}" onclick="setAdmClass('${c}')">${c}</button>`).join('')}</div>`;
+}
+function clsStudents(){
+  return students.filter(s=>s.cls===admClass).sort((a,b)=>a.name.localeCompare(b.name,'ko'));
+}
+
+/* ───── 관리자: 토요일 출석 ───── */
+function renderAttend(p){
+  const scheds = config.satSchedule.filter(d=>d<=todayStr()).slice(-4).reverse();
+  p.innerHTML = `
+    <h4>토요일 보충 출석 체크</h4>
+    ${classChips()}
+    <div class="date-row">
+      <label>날짜</label>
+      <input type="date" value="${attendDate}" onchange="attendDate=this.value;renderAdminTab(false)">
+      ${scheds.map(d=>`<button class="chip small ${d===attendDate?'active':''}" onclick="attendDate='${d}';renderAdminTab(false)">${prettyDate(d)}</button>`).join('')}
+    </div>
+    <div class="stu-toggle-grid">
+      ${clsStudents().map(st=>{
+        const on = (st.satDates||[]).includes(attendDate);
+        return `<button class="stu-toggle ${on?'on':''}" onclick="toggleAttend('${st.id}')">${esc(st.name)}</button>`;
+      }).join('') || '<div style="color:#b0a394;font-family:SubFont">이 반에 학생이 없어요</div>'}
+    </div>
+    <div class="save-note">누르면 바로 저장돼요! (초록색 = 출석, 별 1개)</div>`;
+}
+async function toggleAttend(id){
+  const st = students.find(s=>s.id===id);
+  if(!st) return;
+  st.satDates = st.satDates || [];
+  const i = st.satDates.indexOf(attendDate);
+  if(i>-1) st.satDates.splice(i,1); else { st.satDates.push(attendDate); st.satDates.sort(); }
+  await dbSaveStudent({...st});
+  if(useFB) renderAdminTab(false);
+}
+
+/* ───── 관리자: 단어 시험 ───── */
+function renderVocab(p){
+  const list = clsStudents();
+  const modeBtns = `
+    <div class="chip-row">
+      <button class="chip ${vocabMode==='score'?'active':''}" onclick="vocabMode='score';vocabPreview=null;renderAdminTab(false)">점수로 계산</button>
+      <button class="chip ${vocabMode==='manual'?'active':''}" onclick="vocabMode='manual';renderAdminTab(false)">직접 체크</button>
+    </div>`;
+  const dateRow = `
+    <div class="date-row">
+      <label>시험 날짜</label>
+      <input type="date" value="${vocabDate}" onchange="vocabDate=this.value;vocabPreview=null;renderAdminTab(false)">
+    </div>`;
+  if(vocabMode==='manual'){
+    p.innerHTML = `<h4>단어시험 스티커 체크 (통과 5번 = 별 1개)</h4>${classChips()}${modeBtns}${dateRow}
+      <div class="stu-toggle-grid">
+        ${list.map(st=>{
+          const on = (st.vocabDates||[]).includes(vocabDate);
+          return `<button class="stu-toggle ${on?'on':''}" onclick="toggleVocab('${st.id}')">${esc(st.name)}</button>`;
+        }).join('') || '<div style="color:#b0a394;font-family:SubFont">이 반에 학생이 없어요</div>'}
+      </div>
+      <div class="save-note">누르면 바로 저장돼요! (초록색 = 기준 통과, 단어 스티커 1개)</div>`;
+    return;
+  }
+  p.innerHTML = `<h4>단어시험 점수 입력 (통과 5번 = 별 1개)</h4>${classChips()}${modeBtns}${dateRow}
+    <table class="score-table">
+      <tr><th>이름</th><th>점수</th><th>기준 친구</th></tr>
+      ${list.map(st=>`<tr>
+        <td>${esc(st.name)}</td>
+        <td><input type="number" id="score_${st.id}" placeholder="－" min="0"></td>
+        <td><input type="radio" name="baseStu" value="${st.id}"></td>
+      </tr>`).join('')}
+    </table>
+    <div class="save-note">결석한 친구는 점수를 비워두면 돼요. 기준 친구를 꼭 한 명 골라주세요!</div>
+    <button class="big-btn" onclick="calcVocab()">결과 계산하기</button>
+    <div id="vocabResult"></div>`;
+}
+function calcVocab(){
+  const base = document.querySelector('input[name=baseStu]:checked');
+  if(!base){ toast('기준 친구를 골라주세요!'); return; }
+  const baseId = base.value;
+  const list = clsStudents();
+  const scores = {};
+  list.forEach(st=>{
+    const v = document.getElementById('score_'+st.id).value.trim();
+    if(v!=='') scores[st.id] = Number(v);
+  });
+  if(!(baseId in scores)){ toast('기준 친구의 점수를 입력해주세요!'); return; }
+  const baseScore = scores[baseId];
+  let higher=0, lower=0;
+  const result = [];
+  list.forEach(st=>{
+    if(!(st.id in scores)) { result.push({st, status:'absent'}); return; }
+    if(st.id===baseId) return;
+    if(scores[st.id] > baseScore) higher++;
+    else if(scores[st.id] < baseScore) lower++;
+    result.push({st, status: scores[st.id] > baseScore ? 'pass':'fail', score:scores[st.id]});
+  });
+  const basePass = lower > higher;
+  const baseSt = list.find(s=>s.id===baseId);
+  result.push({st:baseSt, status: basePass?'pass':'fail', score:baseScore, isBase:true});
+  vocabPreview = { date: vocabDate, result };
+  const box = document.getElementById('vocabResult');
+  box.innerHTML = `<div class="preview-box">
+    <b>📋 ${prettyDate(vocabDate)} 결과 미리보기</b> (기준: ${esc(baseSt.name)} ${baseScore}점 — 낮은 친구 ${lower}명 vs 높은 친구 ${higher}명 → 기준 친구 ${basePass?'통과!':'아쉽!'})<br>
+    ${result.map(r=>{
+      if(r.status==='absent') return `<span class="fail">${esc(r.st.name)} — 결석(변화 없음)</span>`;
+      return `<span class="${r.status==='pass'?'pass':'fail'}">${esc(r.st.name)} ${r.score}점 ${r.status==='pass'?'✓ 스티커!':'✗'}</span>${r.isBase?' <b style="color:#5B8DEF">(기준)</b>':''}`;
+    }).join('<br>')}
+    </div>
+    <button class="big-btn pink" onclick="saveVocab()">이대로 저장하기</button>`;
+}
+async function saveVocab(){
+  if(!vocabPreview) return;
+  const { date, result } = vocabPreview;
+  for(const r of result){
+    if(r.status==='absent') continue;
+    const st = students.find(s=>s.id===r.st.id);
+    if(!st) continue;
+    st.vocabDates = st.vocabDates || [];
+    const has = st.vocabDates.includes(date);
+    if(r.status==='pass' && !has){ st.vocabDates.push(date); st.vocabDates.sort(); await dbSaveStudent({...st}); }
+    if(r.status==='fail' && has){ st.vocabDates = st.vocabDates.filter(d=>d!==date); await dbSaveStudent({...st}); }
+  }
+  vocabPreview = null;
+  toast('저장 완료! ⭐');
+  renderAdminTab(false);
+}
+async function toggleVocab(id){
+  const st = students.find(s=>s.id===id);
+  if(!st) return;
+  st.vocabDates = st.vocabDates || [];
+  const i = st.vocabDates.indexOf(vocabDate);
+  if(i>-1) st.vocabDates.splice(i,1); else { st.vocabDates.push(vocabDate); st.vocabDates.sort(); }
+  await dbSaveStudent({...st});
+  if(useFB) renderAdminTab(false);
+}
+
+/* ───── 관리자: 보충 일정 ───── */
+function renderSched(p){
+  p.innerHTML = `
+    <h4>토요일 보충 일정 (날짜를 누르면 등록/해제)</h4>
+    <div class="cal-big"><div id="admCal"></div></div>
+    <div class="sched-list" id="schedList"></div>`;
+  renderCalendar('admCal', admCalMonth, true);
+  renderSchedList();
+}
+function renderSchedList(){
+  const el = document.getElementById('schedList');
+  if(!el) return;
+  const upcoming = config.satSchedule.filter(d=>d>=todayStr());
+  el.innerHTML = upcoming.length
+    ? '다가오는 보충: ' + upcoming.map(d=>`<span class="rec-chip">${prettyDate(d)}<button onclick="toggleSched('${d}')">✕</button></span>`).join('')
+    : '<span style="color:#b0a394">등록된 예정 보충일이 없어요</span>';
+}
+
+/* ───── 관리자: 학생 관리 ───── */
+function renderManage(p){
+  const list = clsStudents();
+  p.innerHTML = `
+    <h4>학생 관리 · 보상 지급</h4>
+    ${classChips()}
+    <div class="add-row">
+      <input id="newStuName" placeholder="새 친구 이름" onkeydown="if(event.key==='Enter')addStudent()">
+      <button class="big-btn" style="margin-top:0" onclick="addStudent()">추가</button>
+    </div>
+    <div class="mgr-list">
+      ${list.map(st=>{
+        const S = getStars(st);
+        return `<div class="mgr-row">
+          <div class="mgr-main">
+            <span class="nm">${esc(st.name)}</span>
+            <span class="st">별 ${S.current.length}/10 · 단어 ${S.vocRemain}/5 · 🎁 ${S.rewards}회</span>
+            <span class="sp"></span>
+            <button class="sm-btn pink" ${S.current.length>=10?'':'disabled style="opacity:.35"'} onclick="giveReward('${st.id}')">🎁 보상 지급</button>
+            <button class="sm-btn" onclick="toggleDetail('${st.id}')">기록 보기</button>
+            <button class="sm-btn danger" onclick="delStudent('${st.id}')">삭제</button>
+          </div>
+          <div class="rec-detail" id="detail_${st.id}">
+            <h6>⭐ 토요일 출석 (${(st.satDates||[]).length}회)</h6>
+            <div class="rec-chips">${(st.satDates||[]).map(d=>
+              `<span class="rec-chip">${prettyDate(d)}<button onclick="delRecord('${st.id}','sat','${d}')">✕</button></span>`).join('')||'<span style="color:#c9bfb4;font-size:12px">없음</span>'}</div>
+            <h6>💗 단어시험 통과 (${(st.vocabDates||[]).length}회)</h6>
+            <div class="rec-chips">${(st.vocabDates||[]).map(d=>
+              `<span class="rec-chip voca">${prettyDate(d)}<button onclick="delRecord('${st.id}','vocab','${d}')">✕</button></span>`).join('')||'<span style="color:#c9bfb4;font-size:12px">없음</span>'}</div>
+          </div>
+        </div>`;
+      }).join('') || '<div style="color:#b0a394;font-family:SubFont">이 반에 학생이 없어요. 위에서 추가해주세요!</div>'}
+    </div>`;
+}
+async function addStudent(){
+  const inp = document.getElementById('newStuName');
+  const name = inp.value.trim();
+  if(!name) return;
+  await dbCreateStudent(name, admClass);
+  inp.value=''; inp.focus();
+  toast(name + ' 추가 완료!');
+  if(useFB) setTimeout(()=>renderAdminTab(false), 300);
+}
+async function delStudent(id){
+  const st = students.find(s=>s.id===id);
+  if(!st) return;
+  if(!confirm(st.name+' 쿠폰을 정말 삭제할까요? 기록도 함께 사라져요!')) return;
+  await dbDeleteStudent(id);
+  if(useFB) setTimeout(()=>renderAdminTab(false), 300);
+}
+function toggleDetail(id){ document.getElementById('detail_'+id).classList.toggle('open'); }
+async function delRecord(id, type, date){
+  const st = students.find(s=>s.id===id);
+  if(!st) return;
+  if(!confirm(prettyDate(date)+' 기록을 지울까요?')) return;
+  if(type==='sat') st.satDates = (st.satDates||[]).filter(d=>d!==date);
+  else st.vocabDates = (st.vocabDates||[]).filter(d=>d!==date);
+  await dbSaveStudent({...st});
+  if(useFB) renderAdminTab(false);
+}
+async function giveReward(id){
+  const st = students.find(s=>s.id===id);
+  if(!st) return;
+  const S = getStars(st);
+  if(S.current.length < 10){ toast('아직 별 10개가 안 됐어요!'); return; }
+  if(!confirm(st.name+'에게 보상을 지급할까요? 별 10개가 사용되고 새 쿠폰이 시작돼요!')) return;
+  st.rewards = (st.rewards||0) + 1;
+  await dbSaveStudent({...st});
+  toast('🎁 '+st.name+' 보상 지급 완료!');
+  if(useFB) renderAdminTab(false);
+}
+
+/* ───── 전체 렌더 & 시작 ───── */
+function renderAll(){
+  renderClassTabs();
+  renderBoard();
+  renderCalendar('stuCal', stuCalMonth, false);
+  if(adminOpen) renderAdminTab(true);
+  if(currentAdminTab==='sched' && adminOpen) renderSchedList();
+}
+function init(){
+  if(window.matchMedia('(prefers-reduced-motion: reduce)').matches){
+    document.querySelectorAll('animate').forEach(a=>a.remove());
+  }
+  if(useFB){
+    firebase.initializeApp(FIREBASE_CONFIG);
+    db = firebase.firestore();
+    db.collection('sticker_students').onSnapshot(snap=>{
+      students = snap.docs.map(d=>({ id:d.id, ...d.data() }));
+      renderAll();
+    }, err=>console.error(err));
+    db.doc('sticker_config/main').onSnapshot(doc=>{
+      config = doc.exists ? { satSchedule:[], ...doc.data() } : { satSchedule: [] };
+      renderAll();
+    }, err=>console.error(err));
+  } else {
+    lsLoad();
+    const b = document.createElement('div');
+    b.className = 'demo-banner';
+    b.textContent = '👀 미리보기 모드 — 코드 상단에 Firebase 설정을 넣으면 실시간 공유돼요!';
+    document.body.appendChild(b);
+    renderAll();
+  }
+}
+init();
+</script>
+</body>
+</html>
